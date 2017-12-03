@@ -119,7 +119,7 @@ public class ClientInterpreter implements Runnable {
 					case FILEINFO:
 						if(loggedIn) {
 							file = fcServer.getFile(myServerId, requestToken[1]);
-							file.info();
+							printLocalNewLine(file.info());
 						} else {
 							printLocal("Please login first");
 						}
@@ -135,7 +135,7 @@ public class ClientInterpreter implements Runnable {
 				}
 				
 			}catch(Exception e) {
-				printLocalNewLine("SOMETHING WRONG " + e);
+				printLocalNewLine("SOMETHING WRONG: " + e);
 			}
 			
 		}
