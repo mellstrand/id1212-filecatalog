@@ -5,10 +5,13 @@
  */
 package se.kth.id1212.filecatalog.common;
 
+import java.io.Serializable;
+
 /**
  *
  * @author mellstrand
  */
-public interface FileDTO {
-	
+public interface FileDTO extends Serializable {
+
+	public String info();
 }

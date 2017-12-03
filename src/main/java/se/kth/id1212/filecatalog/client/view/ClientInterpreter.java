@@ -13,6 +13,8 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
 import java.util.Scanner;
+import se.kth.id1212.filecatalog.common.AccessPermission;
+import se.kth.id1212.filecatalog.common.ReadWritePermission;
 import se.kth.id1212.filecatalog.server.model.AccountException;
 
 /**
@@ -28,7 +30,7 @@ public class ClientInterpreter implements Runnable {
     private static final String LOGOUT  = "LOGOUT : Log out from server";
     private static final String NEWACC = "NEWACC [username][password]: Create account";
 	private static final String DELACC  = "DELACC [username][password] : Delete account";
-    private static final String NEWFILE  = "NEWFILE [filename][public|private][read|write] : Creates file";
+    private static final String NEWFILE  = "NEWFILE [filename][public|private][read|write|readwrite] : Creates file";
 	private static final String DELFILE  = "DELFILE [filename]";
     private static final String FILEINFO = "FILEINFO [filename] : Display info for a file";
     private static final String ALLFILES  = "ALLFILES : Display all public files";
@@ -40,7 +42,7 @@ public class ClientInterpreter implements Runnable {
 	private long myServerId;
 	
 	private boolean running = false;
-	private boolean loggedIn = true;
+	private boolean loggedIn = false;
 
 	public ClientInterpreter() throws RemoteException {
 		fcClient = new MessageHandler();
@@ -96,10 +98,17 @@ public class ClientInterpreter implements Runnable {
 						fcServer.deleteAccount(requestToken[1], requestToken[2]);
 						break;
 					case NEWFILE:
-						if(loggedIn)
-							fcServer.createFile(myServerId, requestToken[1]);
-						else
+						if(loggedIn) {
+							try {
+								AccessPermission ap = AccessPermission.valueOf(requestToken[2].toUpperCase());
+								ReadWritePermission rwp = ReadWritePermission.valueOf(requestToken[3].toUpperCase());
+								fcServer.createFile(myServerId, requestToken[1], ap, rwp);
+							} catch(Exception e) {
+								printLocalNewLine("USAGE: " + NEWFILE + "\n" + e);
+							}
+						} else {
 							printLocalNewLine("Please login first");
+						}
 						break;
 					case DELFILE:	
 						if(loggedIn)
@@ -108,10 +117,12 @@ public class ClientInterpreter implements Runnable {
 							printLocalNewLine("Please login first");
 						break;
 					case FILEINFO:
-						if(loggedIn)
-							fcServer.getFileInfo(myServerId, requestToken[1]);
-						else
+						if(loggedIn) {
+							file = fcServer.getFile(myServerId, requestToken[1]);
+							file.info();
+						} else {
 							printLocal("Please login first");
+						}
 						break;
 					case ALLFILES:
 						if(loggedIn)

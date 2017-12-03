@@ -30,6 +30,12 @@ import javax.persistence.Version;
 	)
 	,
 	@NamedQuery(
+		name = "accountByUserId",
+		query = "SELECT acct FROM Account acct WHERE acct.userId LIKE :userId",
+		lockMode = LockModeType.OPTIMISTIC
+	)
+	,
+	@NamedQuery(
 			name = "accountDelete",
 			query = "DELETE FROM Account acct WHERE acct.holder.name LIKE :accountName"
 	)
@@ -40,7 +46,7 @@ import javax.persistence.Version;
 public class Account implements AccountDTO {
 	
 	@Id
-	@Column(name="accountid", nullable=false)
+	@Column(name="accountId", nullable=false)
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private long accountId;
 	
@@ -51,8 +57,8 @@ public class Account implements AccountDTO {
 	@Column(name="password", nullable=false)
 	private String password;
 	
-	@Column(name="loginId", nullable=true)
-	private long loginId;
+	@Column(name="userId", nullable=true)
+	private long userId;
 	
 	@Version
     @Column(name = "OPTLOCK")
@@ -73,15 +79,19 @@ public class Account implements AccountDTO {
 		return holder.getName();
 	}
 	
+	public Holder getHolder() {
+		return holder;
+	}
+	
 	public String getPassword() {
 		return password;
 	}
 	
-	public void setLoginId(long loginId) {
-		this.loginId = loginId;
+	public void setUserId(long userId) {
+		this.userId = userId;
 	}
 	
-	public long getLoginId() {
-		return loginId;
+	public long getUserId() {
+		return userId;
 	}
 }

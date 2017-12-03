@@ -33,9 +33,17 @@ public class UsersManager {
 		user.sendMessage(message);
 	}
 	
-	public void removeUser(long userId) {
-		sendToUser(userId, "Loggin out...");
-		loggedInUsers.remove(userId);
+	public User getUserById(long userId) {
+		return loggedInUsers.get(userId);
+	}
+	
+	public void removeUser(long userId) throws AccountException {
+		if(loggedInUsers.containsKey(userId)) {
+			sendToUser(userId, "Logging out...");
+			loggedInUsers.remove(userId);
+		} else {
+			throw new AccountException("User not found, log out error...");
+		}
 	}
 	
 	public boolean isLoggedIn(long userId) {

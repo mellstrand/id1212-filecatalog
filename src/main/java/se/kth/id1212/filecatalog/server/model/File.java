@@ -15,16 +15,33 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.LockModeType;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Version;
+import se.kth.id1212.filecatalog.common.FileDTO;
 
 /**
  *
  * @author mellstrand
  */
 
+@NamedQueries({
+	@NamedQuery(
+			name = "fileExists",
+			query = "SELECT f FROM File f WHERE f.fileName LIKE :fileName",
+			lockMode = LockModeType.OPTIMISTIC
+	)
+	,
+	@NamedQuery(
+			name = "fileDelete",
+			query = "DELETE FROM File f WHERE f.fileName LIKE :fileName"
+	)
+})
+
 @Entity(name="File")
-public class File implements Serializable {
+public class File implements FileDTO {
 	
 	@Id
 	@Column(name = "fileid", nullable = false)
@@ -34,7 +51,7 @@ public class File implements Serializable {
 	@Column(name = "filename", nullable = false)
 	private String fileName;
 	
-	@OneToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "owner", nullable = false)
 	private Holder holder;
 	
@@ -76,6 +93,13 @@ public class File implements Serializable {
 	public ReadWritePermission getReadWritePermission() {
 		return rwpermission;
 	}
+	
+	@Override
+	public String info() {
+		return "Name: " + fileName + "\n Owner: " + getOwner() + 
+				"\n Access: " + access + "\n ReadWrite: " + rwpermission;
+	}
+	
 	
 			
 }

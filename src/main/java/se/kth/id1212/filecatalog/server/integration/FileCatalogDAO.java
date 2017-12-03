@@ -44,6 +44,10 @@ public class FileCatalogDAO {
 		threadLocalEntityManager.get().getTransaction().commit();
 	}
 	
+	public void update() {
+		commitTransaction();
+	}
+	
 	public void accountLogin() {
 		
 	}
@@ -65,15 +69,11 @@ public class FileCatalogDAO {
 	public void deleteFile(String fileName) {
 		try {
 			EntityManager entityManager = beginTransaction();
-			entityManager.createNamedQuery("deleteFile", File.class).
+			entityManager.createNamedQuery("fileDelete", File.class).
 					setParameter("fileName", fileName).executeUpdate();
 		} finally {
 			commitTransaction();
 		}
-	}
-	
-	public void updateFile() {
-		
 	}
 	
 	public File fileExists(String fileName, boolean endTransaction) {
@@ -113,10 +113,6 @@ public class FileCatalogDAO {
 		}
 	}
 	
-	public void updateAccount() {
-		
-	}
-	
 	public Account accountExists(String accountName, boolean endTransaction) {
 		
 		try {
@@ -126,6 +122,22 @@ public class FileCatalogDAO {
 						setParameter("accountName", accountName).getSingleResult();
 			} catch(NoResultException nre) {
 				return null;
+			}
+		} finally {
+			if(endTransaction) {
+				commitTransaction();
+			}
+		}
+	}
+	
+	public Account accountByUserId(long userId, boolean endTransaction) {
+		try {
+			EntityManager entityManager = beginTransaction();
+			try {
+				return entityManager.createNamedQuery("accountByUserId", Account.class).
+					setParameter("userId", userId).getSingleResult();
+			} catch(NoResultException nre) {
+				return null;	
 			}
 		} finally {
 			if(endTransaction) {

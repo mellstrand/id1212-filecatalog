@@ -8,6 +8,7 @@ package se.kth.id1212.filecatalog.common;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import se.kth.id1212.filecatalog.server.model.AccountException;
+import se.kth.id1212.filecatalog.server.model.FileException;
 
 /**
  *
@@ -17,26 +18,22 @@ public interface FileCatalog extends Remote {
 	
 	public static final String FILE_CATALOG_REGISTRY_NAME = "fileCatalogServer";
 	
-	public long login(FileCatalogClient client, String accountName, String password) throws RemoteException;
+	public long login(FileCatalogClient client, String accountName, String password) throws RemoteException, AccountException;
 	
-	public void logout(long id) throws RemoteException;
+	public void logout(long userId) throws RemoteException, AccountException;
 	
+	public void createFile(long userId, String fileName, AccessPermission ap, ReadWritePermission rwp) throws RemoteException, FileException;
 	
-	public void createFile(long userId, String fileName) throws RemoteException;
+	public void deleteFile(long userId, String fileName) throws RemoteException, FileException;
 	
-	public void deleteFile(long userId, String fileName) throws RemoteException;
+	public FileDTO getFile(long userId, String fileName) throws RemoteException, FileException;
 	
-	public void getFile(long userId, String fileName) throws RemoteException;
-	
-	public void getFileInfo(long userId, String fileName) throws RemoteException;
-	
-	public void getAllFiles(long userId) throws RemoteException;
-	
+	public void getAllFiles(long userId) throws RemoteException, FileException;
 	
 	public void createAccount(String accountName, String password) throws RemoteException, AccountException;
 	
 	public void deleteAccount(String accountName, String password) throws RemoteException, AccountException;
 	
-	public void getAccountAssociations(String accountName) throws RemoteException;
+	public void getAccountFiles(String accountName) throws RemoteException, AccountException, FileException;
 	
 }
