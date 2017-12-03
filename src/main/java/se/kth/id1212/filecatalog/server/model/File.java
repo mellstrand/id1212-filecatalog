@@ -16,6 +16,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.Version;
 
 /**
  *
@@ -43,12 +44,16 @@ public class File implements Serializable {
 	@Column(name = "rwpermission", nullable = false)
 	private ReadWritePermission rwpermission;	
 	
+	@Version
+    @Column(name = "OPTLOCK")
+    private int versionNum;
+
 	
 	public File() {
 		this(null, null, null, null);
 	}
 	
-	public File(String fileName, Holder holder, AccessPermission access, ReadWritePermission rwpermission) {
+	public File(Holder holder, String fileName, AccessPermission access, ReadWritePermission rwpermission) {
 		this.fileName = fileName;
 		this.holder = holder;
 		this.access = access;

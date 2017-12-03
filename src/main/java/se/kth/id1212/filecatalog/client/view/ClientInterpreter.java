@@ -23,6 +23,17 @@ import se.kth.id1212.filecatalog.server.model.AccountException;
 public class ClientInterpreter implements Runnable {
 	
 	private static final String PROMPT = ">> ";
+	private static final String HELP  = "HELP : Display help message";
+    private static final String LOGIN  = "LOGIN [username][password] : Log in to server";
+    private static final String LOGOUT  = "LOGOUT : Log out from server";
+    private static final String NEWACC = "NEWACC [username][password]: Create account";
+	private static final String DELACC  = "DELACC [username][password] : Delete account";
+    private static final String NEWFILE  = "NEWFILE [filename][public|private][read|write] : Creates file";
+	private static final String DELFILE  = "DELFILE [filename]";
+    private static final String FILEINFO = "FILEINFO [filename] : Display info for a file";
+    private static final String ALLFILES  = "ALLFILES : Display all public files";
+	private static final String USERFILES  = "USERFILES : Display all user owned files";
+       
 	private final Scanner scanner = new Scanner(System.in);
 	private final FileCatalogClient fcClient;
 	private FileCatalog fcServer;
@@ -48,8 +59,9 @@ public class ClientInterpreter implements Runnable {
 	public void run() {
 		
 		AccountDTO acct = null;
+		FileDTO file = null;
 		
-		printLocalNewLine("Ready to receive...");
+		printLocalNewLine("Ready, type 'HELP' for instructions...");
 			
 		while(running) {
 			
@@ -61,6 +73,9 @@ public class ClientInterpreter implements Runnable {
 				MessageTypes msgType = MessageTypes.valueOf(requestToken[0].toUpperCase());
 
 				switch(msgType) {
+					case HELP:
+						printHelpMessage();
+						break;
 					case LOGIN:
 						printLocalNewLine("LOGIN" + Arrays.toString(requestToken));
 						myServerId = fcServer.login(fcClient, requestToken[1], requestToken[2]);
@@ -131,6 +146,11 @@ public class ClientInterpreter implements Runnable {
 		for(String part : parts) {
 			System.out.println(part);
 		}
+	}
+
+	private void printHelpMessage() {
+		printLocalNewLine(HELP,LOGIN,LOGOUT,NEWACC,DELACC,NEWFILE,DELFILE,
+						FILEINFO,ALLFILES,USERFILES);
 	}
 	
 	/**

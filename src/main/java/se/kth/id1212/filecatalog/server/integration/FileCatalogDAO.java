@@ -106,7 +106,7 @@ public class FileCatalogDAO {
 	public void deleteAccount(String accountName) {
 		try {
 			EntityManager entityManager = beginTransaction();
-			entityManager.createNamedQuery("deleteAccount", File.class).
+			entityManager.createNamedQuery("accountDelete", Account.class).
 					setParameter("accountName", accountName).executeUpdate();
 		} finally {
 			commitTransaction();
