@@ -12,33 +12,38 @@ package se.kth.id1212.filecatalog.client.view;
  */
 public enum MessageTypes {
 
-	HELP,
+    HELP,
     /**
      */
     LOGIN,
-	/**
-	 * 
-	 */
-	LOGOUT,
+    /**
+     * 
+     */
+    LOGOUT,
     /**
      */
     NEWACC,
     /**
-	 * 
-	 */
-	DELACC,
-	/**
-	 * 
-	 */
+     * 
+     */
+    DELACC,
+    /**
+     * 
+     */
     NEWFILE,
     /**
      */
-	DELFILE,
-	/**
-	 * 
-	 */
+    DELFILE,
+    /**
+     * 
+     */
     FILEINFO,
     /**
+     * 
      */
-    ALLFILES	
+    ALLFILES,
+    /**
+     * 
+     */
+    USERFILES
 }

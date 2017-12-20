@@ -7,9 +7,9 @@
     <class>se.kth.id1212.filecatalog.server.model.File</class>
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:derby://localhost:1527/FileCatalogDB"/>
-      <property name="javax.persistence.jdbc.user" value="filecatalogdb"/>
+      <property name="javax.persistence.jdbc.user" value="adminfc"/>
       <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.ClientDriver"/>
-      <property name="javax.persistence.jdbc.password" value="filecatalogdb"/>
+      <property name="javax.persistence.jdbc.password" value="passfc"/>
       <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
       <property name="eclipselink.logging.level" value="FINE"/>
     </properties>

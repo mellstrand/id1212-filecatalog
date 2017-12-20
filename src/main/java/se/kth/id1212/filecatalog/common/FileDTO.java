@@ -14,4 +14,5 @@ import java.io.Serializable;
 public interface FileDTO extends Serializable {
 
 	public String info();
+	
 }

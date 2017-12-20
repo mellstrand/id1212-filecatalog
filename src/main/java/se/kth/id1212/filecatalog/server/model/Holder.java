@@ -21,66 +21,66 @@ import javax.persistence.Version;
 @Entity(name="Holder")
 public class Holder implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-	
-	@Id
-	@Column(name="accountid", nullable=false)
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @Column(name="holderId", nullable=false)
     @GeneratedValue(strategy = GenerationType.AUTO)
-	private Long accountId;
-	
-	@Column(name="name", nullable=false)
-	private String name;
-	
-	@Version
+    private long holderId;
+
+    @Column(name="name", nullable=false)
+    private String name;
+
+    @Version
     @Column(name = "OPTLOCK")
     private int versionNum;
 
-	public Holder() {
-		this(null);
-	}
-	
-	public Holder(String name) {
-		this.name = name;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
-	/*
-	public Long getId() {
-		return id;
-	}
+    public Holder() {
+	    this(null);
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Holder(String name) {
+	    this.name = name;
+    }
 
-	@Override
-	public int hashCode() {
-		int hash = 0;
-		hash += (id != null ? id.hashCode() : 0);
-		return hash;
-	}
+    public String getName() {
+	    return name;
+    }
 
-	@Override
-	public boolean equals(Object object) {
-		// TODO: Warning - this method won't work in the case the id fields are not set
-		if (!(object instanceof Holder)) {
-			return false;
-		}
-		Holder other = (Holder) object;
-		if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-			return false;
-		}
-		return true;
-	}
+    /*
+    public long getId() {
+	    return id;
+    }
 
-	@Override
-	public String toString() {
-		return "filecatalog.server.model.Holder[ id=" + accountId + " ]";
-	}
-	
-	*/
-	
+    public void setId(long id) {
+	    this.id = id;
+    }
+
+    @Override
+    public int hashCode() {
+	    int hash = 0;
+	    hash += (id != null ? id.hashCode() : 0);
+	    return hash;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+	    // TODO: Warning - this method won't work in the case the id fields are not set
+	    if (!(object instanceof Holder)) {
+		    return false;
+	    }
+	    Holder other = (Holder) object;
+	    if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+		    return false;
+	    }
+	    return true;
+    }
+
+    @Override
+    public String toString() {
+	    return "filecatalog.server.model.Holder[ id=" + accountId + " ]";
+    }
+
+    */
+
 }

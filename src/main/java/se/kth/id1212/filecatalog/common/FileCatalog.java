@@ -22,18 +22,18 @@ public interface FileCatalog extends Remote {
 	
 	public void logout(long userId) throws RemoteException, AccountException;
 	
-	public void createFile(long userId, String fileName, AccessPermission ap, ReadWritePermission rwp) throws RemoteException, FileException;
+	public void createFile(long userId, String fileName, AccessPermission ap, ReadWritePermission rwp) throws RemoteException, AccountException, FileException;
 	
-	public void deleteFile(long userId, String fileName) throws RemoteException, FileException;
+	public void deleteFile(long userId, String fileName) throws RemoteException, AccountException, FileException;
 	
-	public FileDTO getFile(long userId, String fileName) throws RemoteException, FileException;
+	public void getFile(long userId, String fileName) throws RemoteException, AccountException, FileException;
 	
-	public void getAllFiles(long userId) throws RemoteException, FileException;
+	public void getAllFiles(long userId) throws RemoteException, AccountException, FileException;
 	
 	public void createAccount(String accountName, String password) throws RemoteException, AccountException;
 	
 	public void deleteAccount(String accountName, String password) throws RemoteException, AccountException;
 	
-	public void getAccountFiles(String accountName) throws RemoteException, AccountException, FileException;
+	public void getAllAccountFiles(long userId) throws RemoteException, AccountException, FileException;
 	
 }

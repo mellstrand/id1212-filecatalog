@@ -20,7 +20,7 @@ import java.rmi.registry.Registry;
  */
 public class FileServer {
 	
-	private String fileServerName = FileCatalog.FILE_CATALOG_REGISTRY_NAME;
+	private final String fileServerName = FileCatalog.FILE_CATALOG_REGISTRY_NAME;
 	
 	private void startRMI() throws RemoteException, MalformedURLException {
 		try {

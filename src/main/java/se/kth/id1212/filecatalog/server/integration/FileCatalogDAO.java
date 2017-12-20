@@ -5,6 +5,7 @@
  */
 package se.kth.id1212.filecatalog.server.integration;
 
+import java.util.List;
 import se.kth.id1212.filecatalog.common.AccountDTO;
 import se.kth.id1212.filecatalog.common.FileDTO;
 import se.kth.id1212.filecatalog.server.model.Account;
@@ -14,6 +15,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
+import se.kth.id1212.filecatalog.server.model.FileException;
 
 
 /**
@@ -23,94 +25,133 @@ import javax.persistence.Persistence;
  */
 public class FileCatalogDAO {
 
-	private final EntityManagerFactory entityManagerFactory;
-	private final ThreadLocal<EntityManager> threadLocalEntityManager = new ThreadLocal<>();
+    private final EntityManagerFactory entityManagerFactory;
+    private final ThreadLocal<EntityManager> threadLocalEntityManager = new ThreadLocal<>();
 
-	public FileCatalogDAO() {
-		entityManagerFactory = Persistence.createEntityManagerFactory("FileCatalogPU");
+    public FileCatalogDAO() {
+	entityManagerFactory = Persistence.createEntityManagerFactory("FileCatalogPU");
+    }
+
+    private EntityManager beginTransaction() {
+	EntityManager entityManager = entityManagerFactory.createEntityManager();
+	threadLocalEntityManager.set(entityManager);
+	EntityTransaction entityTransaction = entityManager.getTransaction();
+	if(!entityTransaction.isActive()) {
+	    entityTransaction.begin();
 	}
-	
-	private EntityManager beginTransaction() {
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		threadLocalEntityManager.set(entityManager);
-		EntityTransaction entityTransaction = entityManager.getTransaction();
-		if(!entityTransaction.isActive()) {
-			entityTransaction.begin();
-		}
-		return entityManager;
+	return entityManager;
+    }
+
+    private void commitTransaction() {
+	threadLocalEntityManager.get().getTransaction().commit();
+    }
+
+    public void update() {
+	commitTransaction();
+    }
+
+/*--------------------------------------*/
+/*	    FILE METHODS		*/
+/*--------------------------------------*/
+
+
+    public void createFile(FileDTO fileName) {
+	try {
+	    EntityManager entityManager = beginTransaction();
+	    entityManager.persist(fileName);
+	} finally {
+	    commitTransaction();
 	}
-	
-	private void commitTransaction() {
-		threadLocalEntityManager.get().getTransaction().commit();
+    }
+
+    public void deleteFile(String fileName) {
+	try {
+	    EntityManager entityManager = beginTransaction();
+	    entityManager.createNamedQuery("fileDelete", File.class)
+		    .setParameter("fileName", fileName).executeUpdate();
+	} finally {
+	    commitTransaction();
 	}
-	
-	public void update() {
+    }
+
+    public File fileExists(String fileName, boolean endTransaction) {
+
+	try {
+	    EntityManager entityManager = beginTransaction();
+	    try {
+		return entityManager.createNamedQuery("fileExists", File.class)
+			.setParameter("fileName", fileName).getSingleResult();
+	    } catch(NoResultException nre) {
+		return null;
+	    }
+	} finally {
+	    if(endTransaction) {
 		commitTransaction();
+	    }
 	}
+    }
 	
-	public void accountLogin() {
-		
+    public List<File> getAllFiles() {
+	try {
+	    EntityManager entityManager = beginTransaction();
+	    return entityManager.createNamedQuery("getAllFiles", File.class).getResultList();
+	} catch (NoResultException e) {
+	    return null;
+	}
+    }
+    
+    public List<File> getAllAccountFiles(String accountName) {
+	try {
+	    EntityManager entityManager = beginTransaction();
+	    return entityManager.createNamedQuery("getAllAccountFiles", File.class)
+		    .setParameter("name", accountName).getResultList();
+	} catch(NoResultException nre) {
+	    return null;
+	}
+    } 
+	
+	
+/*--------------------------------------*/
+/*	    ACCOUNT METHODS		*/
+/*--------------------------------------*/
+	
+	
+	public Account accountLogin(String accountName, String accountPassword, boolean endTransaction) {
+	    try {
+	       EntityManager entityManager = beginTransaction();
+		return entityManager.createNamedQuery("accountLogin", Account.class)
+		    .setParameter("name", accountName)
+		    .setParameter("password", accountPassword).getSingleResult();
+	    } catch(NoResultException nre) {
+		return null;
+	    }
+	    finally {
+		if(endTransaction) {
+		    commitTransaction();
+		}
+	    }
 	}
 	
 	public void accountLogout() {
 		
 	}
 	
-	
-	public void createFile(FileDTO fileName) {
-		try {
-			EntityManager entityManager = beginTransaction();
-			entityManager.persist(fileName);
-		} finally {
-			commitTransaction();
-		}
+	public void accountCreate(AccountDTO account) {
+	    try {
+		EntityManager entityManager = beginTransaction();
+		entityManager.persist(account);
+	    } finally {
+		    commitTransaction();
+	    }
 	}
 	
-	public void deleteFile(String fileName) {
-		try {
-			EntityManager entityManager = beginTransaction();
-			entityManager.createNamedQuery("fileDelete", File.class).
-					setParameter("fileName", fileName).executeUpdate();
-		} finally {
-			commitTransaction();
-		}
-	}
-	
-	public File fileExists(String fileName, boolean endTransaction) {
-		
-		try {
-			EntityManager entityManager = beginTransaction();
-			try {
-				return entityManager.createNamedQuery("fileExists", File.class).
-						setParameter("fileName", fileName).getSingleResult();
-			} catch(NoResultException nre) {
-				return null;
-			}
-		} finally {
-			if(endTransaction) {
-				commitTransaction();
-			}
-		}
-		
-	}
-	
-	public void createAccount(AccountDTO account) {
-		try {
-			EntityManager entityManager = beginTransaction();
-			entityManager.persist(account);
-		} finally {
-			commitTransaction();
-		}
-	}
-	
-	public void deleteAccount(String accountName) {
-		try {
-			EntityManager entityManager = beginTransaction();
-			entityManager.createNamedQuery("accountDelete", Account.class).
-					setParameter("accountName", accountName).executeUpdate();
-		} finally {
-			commitTransaction();
-		}
+	public void accountDelete(AccountDTO account) {
+	    try {
+		EntityManager entityManager = beginTransaction();
+		entityManager.remove(account);
+	    } finally {
+		commitTransaction();
+	    }
 	}
 	
 	public Account accountExists(String accountName, boolean endTransaction) {
@@ -145,5 +186,7 @@ public class FileCatalogDAO {
 			}
 		}
 	}
-	
+
+  
+
 }

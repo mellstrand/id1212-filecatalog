@@ -23,75 +23,80 @@ import javax.persistence.Version;
  */
 
 @NamedQueries({
-	@NamedQuery(
-			name = "accountExists",
-			query = "SELECT acct FROM Account acct WHERE acct.holder.name LIKE :accountName",
-			lockMode = LockModeType.OPTIMISTIC
-	)
-	,
-	@NamedQuery(
-		name = "accountByUserId",
-		query = "SELECT acct FROM Account acct WHERE acct.userId LIKE :userId",
-		lockMode = LockModeType.OPTIMISTIC
-	)
-	,
-	@NamedQuery(
-			name = "accountDelete",
-			query = "DELETE FROM Account acct WHERE acct.holder.name LIKE :accountName"
-	)
+    @NamedQuery(
+	name = "accountExists",
+	query = "SELECT acct FROM Account acct WHERE acct.holder.name LIKE :accountName",
+	lockMode = LockModeType.OPTIMISTIC
+    )
+    ,
+    @NamedQuery(
+	name = "accountByUserId",
+	query = "SELECT acct FROM Account acct WHERE acct.userId LIKE :userId",
+	lockMode = LockModeType.OPTIMISTIC
+    )
+    ,
+    @NamedQuery(
+	name = "accountLogin",
+	query = "SELECT acct FROM Account acct WHERE acct.holder.name=:accountName AND acct.password=:accountPassword"
+    )
+    ,
+    @NamedQuery(
+	name = "accountDelete",
+	query = "DELETE FROM Account acct WHERE acct.holder.name LIKE :accountName AND acct.password=:accountPassword"
+    )
 })
 
 
 @Entity(name="Account")
 public class Account implements AccountDTO {
 	
-	@Id
-	@Column(name="accountId", nullable=false)
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private long accountId;
-	
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "holder", nullable = false)
-	private Holder holder;
-	
-	@Column(name="password", nullable=false)
-	private String password;
-	
-	@Column(name="userId", nullable=true)
-	private long userId;
-	
-	@Version
+    @Id
+    @Column(name="accountId", nullable=false)
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private long accountId;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "holder", nullable = false)
+    private Holder holder;
+
+    @Column(name="password", nullable=false)
+    private String password;
+
+    @Column(name="userId", nullable=true)
+    private long userId;
+
+    @Version
     @Column(name = "OPTLOCK")
     private int versionNum;
 
-	
-	public Account() {
-		this(null, null);
-	}
-	
-	public Account(Holder holder, String password) {
-		this.holder = holder;
-		this.password = password;
-	}
-	
-	@Override
-	public String getHolderName() {
-		return holder.getName();
-	}
-	
-	public Holder getHolder() {
-		return holder;
-	}
-	
-	public String getPassword() {
-		return password;
-	}
-	
-	public void setUserId(long userId) {
-		this.userId = userId;
-	}
-	
-	public long getUserId() {
-		return userId;
-	}
+
+    public Account() {
+	    this(null, null);
+    }
+
+    public Account(Holder holder, String password) {
+	    this.holder = holder;
+	    this.password = password;
+    }
+
+    public Holder getHolder() {
+	    return holder;
+    }
+
+    @Override
+    public String getHolderName() {
+	return holder.getName();
+    }
+
+    public String getPassword() {
+	    return password;
+    }
+
+    public void setUserId(long userId) {
+	    this.userId = userId;
+    }
+
+    public long getUserId() {
+	    return userId;
+    }
 }

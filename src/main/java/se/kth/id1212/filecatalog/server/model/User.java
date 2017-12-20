@@ -7,6 +7,7 @@ package se.kth.id1212.filecatalog.server.model;
 
 import se.kth.id1212.filecatalog.common.FileCatalogClient;
 import java.rmi.RemoteException;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -14,29 +15,31 @@ import java.rmi.RemoteException;
  */
 public class User {
 	
-	private final long userId;
-	private final FileCatalogClient node;
-	private final UsersManager usersManager;
-	private final String username;
-	
-	public User(long userId, String username, FileCatalogClient node, UsersManager usersManager) {
-		this.userId = userId;
-		this.username = username;
-		this.node = node;
-		this.usersManager = usersManager;	
-	}
-	
-	public void sendMessage(String message) {
-		try {
-			node.message(message);
-		} catch(RemoteException re) {
-			System.err.println("Couldnt deliver message to " + username);
-		}
-	}
-	
-	public String getUsername() {
-		return username;
-	}
-	
+    private final long userId;
+    private final FileCatalogClient node;
+    private final UsersManager usersManager;
+    private final String username;
+
+    public User(long userId, String username, FileCatalogClient node, UsersManager usersManager) {
+	this.userId = userId;
+	this.username = username;
+	this.node = node;
+	this.usersManager = usersManager;	
+    }
+
+    public void sendMessage(String message) {
+	CompletableFuture.runAsync(() -> {
+	    try {
+		node.message(message);
+	    } catch(RemoteException re) {
+		System.err.println("Couldnt deliver message to " + username);
+	    }
+	});
+    }
+
+    public String getUsername() {
+	return username;
+    }
+
 	
 }
