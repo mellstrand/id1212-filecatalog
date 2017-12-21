@@ -65,24 +65,6 @@ public class FileCatalogDAO {
 	}
     }
 
-    public void updateFileMeta(String fileName, long size, AccessPermission ap, ReadWritePermission rwp) {
-	try {
-	    File file = fileExists(fileName, false);
-	    file.setSize(size);
-	    
-	    
-	} finally {
-	    
-	}
-    
-    }
-    
-    
-    public void updateFileMetaPartially(String fileName, long size) {
-
-    
-    }
-
     public void deleteFile(String fileName) {
 	try {
 	    EntityManager entityManager = beginTransaction();
@@ -197,7 +179,7 @@ public class FileCatalogDAO {
 	    EntityManager entityManager = beginTransaction();
 	    try {
 		return entityManager.createNamedQuery("accountByUserId", Account.class).
-			setParameter("userId", userId).getSingleResult();
+			setParameter("passedUserId", userId).getSingleResult();
 	    } catch(NoResultException nre) {
 		    return null;	
 	    }

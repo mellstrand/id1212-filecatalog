@@ -28,7 +28,6 @@ public class UsersManager {
 	long userId = generator.nextLong();
 	User user = new User(userId, username, node);
 	users.put(userId, user);
-	sendToUser(userId, "Welcome " + username + "!");
 	return userId;
     }
 
@@ -47,7 +46,6 @@ public class UsersManager {
 
     public void removeUser(long userId) throws AccountException {
 	if(users.containsKey(userId)) {
-	    sendToUser(userId, "Logging out...");
 	    users.remove(userId);
 	} else {
 	    throw new AccountException("User not found, log out error...");

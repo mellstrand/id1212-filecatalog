@@ -96,6 +96,8 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
 		    owner.sendMessage(user.getUsername() + " uploaded a new version of your file: " + fileName);
 		}
 	    
+	    } else {
+		user.sendMessage("File already exists and you do not have privilege to change it!");
 	    }
 	} catch (NoResultException nre) {
 	    Account account = fileCatalogDAO.accountExists(user.getUsername(), true);
@@ -302,7 +304,7 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
 		    fileCatalogDAO.accountDelete(account);
 		}
 	    } else {
-		throw new AccountException("Couldnt find account");
+		throw new AccountException("Couldn't find account");
 	    }
 	} catch(Exception e) {
 	    throw new AccountException("Delete account problem. " + e);
@@ -350,9 +352,9 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
 	User user = userLoggedIn(userId);
 	try {
 	    Account account = fileCatalogDAO.accountByUserId(userId, false);
-	    System.out.println("DEBUG:" + account.getHolderName());
 	    account.setUserId(0);
 	    fileCatalogDAO.update();
+	    user.sendMessage("Logging out...");
 	    users.removeUser(userId);
 	
 	} catch(Exception e) {

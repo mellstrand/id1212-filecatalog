@@ -41,8 +41,8 @@ import se.kth.id1212.filecatalog.common.FileDTO;
 	query = "SELECT f FROM File f"
     ),
     @NamedQuery(
-	    name = "getAllAccountFiles",
-	    query = "SELECT f FROM File f WHERE f.holder.name LIKE :accountName"
+	name = "getAllAccountFiles",
+	query = "SELECT f FROM File f WHERE f.holder.name LIKE :accountName"
     )
 })
 

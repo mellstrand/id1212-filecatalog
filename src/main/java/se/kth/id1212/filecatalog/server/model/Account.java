@@ -25,19 +25,19 @@ import javax.persistence.Version;
 @NamedQueries({
     @NamedQuery(
 	name = "accountExists",
-	query = "SELECT acct FROM Account acct WHERE acct.holder.name LIKE :accountName",
+	query = "SELECT acct FROM Account acct WHERE acct.holder.name = :accountName",
 	lockMode = LockModeType.OPTIMISTIC
     )
     ,
     @NamedQuery(
 	name = "accountByUserId",
-	query = "SELECT acct FROM Account acct WHERE acct.userId LIKE :userId",
+	query = "SELECT acct FROM Account acct WHERE acct.userId = :passedUserId",
 	lockMode = LockModeType.OPTIMISTIC
     )
     ,
     @NamedQuery(
 	name = "accountLogin",
-	query = "SELECT acct FROM Account acct WHERE acct.holder.name LIKE :accountName AND acct.password LIKE :accountPassword"
+	query = "SELECT acct FROM Account acct WHERE acct.holder.name = :accountName AND acct.password = :accountPassword"
     )
     ,
     @NamedQuery(

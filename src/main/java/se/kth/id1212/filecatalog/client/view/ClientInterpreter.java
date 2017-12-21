@@ -40,12 +40,13 @@ public class ClientInterpreter implements Runnable {
     private static final String LOGOUT  = "LOGOUT";
     private static final String NEWACC = "NEWACC [username][password]";
     private static final String DELACC  = "DELACC [username][password]";
-    private static final String UPLOAD  = "UPLOAD [local filename][public|private][read|write|readwrite]";
+    private static final String UPLOAD  = "UPLOAD [local filename][public|private][read|write]";
     private static final String DOWNLOAD = "DOWNLOAD [remote filename]";
-    private static final String DELETE  = "DELETE [filename]";
-    private static final String INFO = "INFO [filename]";
+    private static final String DELETE  = "DELETE [remote filename]";
+    private static final String INFO = "INFO [remote filename]";
     private static final String LISTALLFILES  = "LISTALLFILES";
     private static final String LISTUSERFILES  = "LISTUSERFILES";
+    private static final String ADDNOTIFY = "ADDNOTIFY [remote filename]";
        
     private final Scanner scanner = new Scanner(System.in);
     private final FileCatalogClient fcClient;
@@ -190,7 +191,7 @@ public class ClientInterpreter implements Runnable {
 
     private void printHelpMessage() {
 	printLocalNewLine(HELP,LOGIN,LOGOUT,NEWACC,DELACC,UPLOAD,DOWNLOAD,
-		DELETE,INFO,LISTALLFILES,LISTUSERFILES);
+		DELETE,INFO,LISTALLFILES,LISTUSERFILES,ADDNOTIFY);
     }
 
     /**
@@ -203,7 +204,7 @@ public class ClientInterpreter implements Runnable {
 
 	    @Override
 	    public void message(String message) throws RemoteException {
-		    printLocalNewLine(message);
+		    printLocalNewLine("SERVER: " + message);
 		    printLocal(PROMPT);
 	    }	
     }
