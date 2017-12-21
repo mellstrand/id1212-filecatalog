@@ -3,16 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.id1212.filecatalog.server.model;
+package se.kth.id1212.filecatalog.common;
 
 /**
  *
  * @author mellstrand
  */
-public class FileException extends Exception {
+public class AccountException extends Exception {
 	
-	
-	public FileException(String message) {
+	public AccountException(String message) {
 		super(message);
+	}
+	
+	public AccountException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

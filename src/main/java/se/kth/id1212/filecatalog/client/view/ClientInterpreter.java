@@ -5,16 +5,26 @@
  */
 package se.kth.id1212.filecatalog.client.view;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import se.kth.id1212.filecatalog.common.AccountDTO;
 import se.kth.id1212.filecatalog.common.FileCatalog;
 import se.kth.id1212.filecatalog.common.FileCatalogClient;
 import se.kth.id1212.filecatalog.common.FileDTO;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import se.kth.id1212.filecatalog.common.AccessPermission;
+import se.kth.id1212.filecatalog.common.AccountException;
+import static se.kth.id1212.filecatalog.common.Constants.DIRECTORY;
+import se.kth.id1212.filecatalog.common.FileException;
 import se.kth.id1212.filecatalog.common.ReadWritePermission;
 
 /**
@@ -25,16 +35,17 @@ import se.kth.id1212.filecatalog.common.ReadWritePermission;
 public class ClientInterpreter implements Runnable {
 	
     private static final String PROMPT = ">> ";
-    private static final String HELP  = "HELP : Display help message";
-    private static final String LOGIN  = "LOGIN [username][password] : Log in to server";
-    private static final String LOGOUT  = "LOGOUT : Log out from server";
-    private static final String NEWACC = "NEWACC [username][password]: Create account";
-    private static final String DELACC  = "DELACC [username][password] : Delete account";
-    private static final String NEWFILE  = "NEWFILE [filename][public|private][read|write|readwrite] : Creates file";
-    private static final String DELFILE  = "DELFILE [filename]";
-    private static final String FILEINFO = "FILEINFO [filename] : Display info for a file";
-    private static final String ALLFILES  = "ALLFILES : Display all public files";
-    private static final String USERFILES  = "USERFILES : Display all user owned files";
+    private static final String HELP  = "HELP : Display commands";
+    private static final String LOGIN  = "LOGIN [username][password]";
+    private static final String LOGOUT  = "LOGOUT";
+    private static final String NEWACC = "NEWACC [username][password]";
+    private static final String DELACC  = "DELACC [username][password]";
+    private static final String UPLOAD  = "UPLOAD [local filename][public|private][read|write|readwrite]";
+    private static final String DOWNLOAD = "DOWNLOAD [remote filename]";
+    private static final String DELETE  = "DELETE [filename]";
+    private static final String INFO = "INFO [filename]";
+    private static final String LISTALLFILES  = "LISTALLFILES";
+    private static final String LISTUSERFILES  = "LISTUSERFILES";
        
     private final Scanner scanner = new Scanner(System.in);
     private final FileCatalogClient fcClient;
@@ -59,9 +70,6 @@ public class ClientInterpreter implements Runnable {
     @Override
     public void run() {
 
-	AccountDTO acct = null;
-	FileDTO file = null;
-
 	printLocalNewLine("Ready, type 'HELP' for instructions...");
 
 	while(running) {
@@ -78,75 +86,111 @@ public class ClientInterpreter implements Runnable {
 			printHelpMessage();
 			break;
 		    case LOGIN:
-			printLocalNewLine("LOGIN" + Arrays.toString(requestToken));
 			myServerId = fcServer.login(fcClient, requestToken[1], requestToken[2]);
 			break;
 		    case LOGOUT:
-			printLocalNewLine("LOGOUT" + Arrays.toString(requestToken));
 			fcServer.logout(myServerId);
 			myServerId = 0;
 			break;
 		    case NEWACC:
-			printLocalNewLine("NEWACC" + Arrays.toString(requestToken));
 			fcServer.createAccount(requestToken[1], requestToken[2]);
 			break;
 		    case DELACC:
-			printLocalNewLine("DELACC" + Arrays.toString(requestToken));
 			fcServer.deleteAccount(requestToken[1], requestToken[2]);
 			break;
-		    case NEWFILE:
+		    case LISTLOCAL:
+			    listLocal();
+			break;
+		    case UPLOAD:
 			try {
-			    AccessPermission ap = AccessPermission.valueOf(requestToken[2].toUpperCase());
-			    ReadWritePermission rwp = ReadWritePermission.valueOf(requestToken[3].toUpperCase());
-			    fcServer.createFile(myServerId, requestToken[1], ap, rwp);
-			} catch(Exception e) {
-			    printLocalNewLine("USAGE: " + NEWFILE + "\n" + e);
+			    upload(requestToken);
+			} catch (IOException ioe) {
+			    printLocalNewLine("UPLOAD-ERROR:" + ioe);
 			}
 			break;
-		    case DELFILE:
+		    case DOWNLOAD:
+			    download(requestToken);
+			break;
+		    case DELETE:
 			fcServer.deleteFile(myServerId, requestToken[1]);
 			break;
-		    case FILEINFO:
-			fcServer.getFile(myServerId, requestToken[1]);
+		    case INFO:
+			fcServer.getFileInfo(myServerId, requestToken[1]);
 			break;
-		    case ALLFILES:
+		    case LISTALLFILES:
 			fcServer.getAllFiles(myServerId);
 			break;
-		    case USERFILES:
+		    case LISTUSERFILES:
 			fcServer.getAllAccountFiles(myServerId);
 			break;
+		    case ADDNOTIFY:
+			fcServer.addNotifyFile(myServerId, requestToken[1]);
+			break;
+		    case QUIT:
+			fcServer.logout(myServerId);
+			UnicastRemoteObject.unexportObject(fcClient, true);
+			running = false;
+			break;
 		    default:
-
 		}
 
-	    }catch(Exception e) {
-		    printLocalNewLine("SOMETHING WRONG: " + e);
+	    }catch(IllegalArgumentException iae) {
+		    printLocalNewLine("Invalid command: " + iae);
+	    }catch(RemoteException | AccountException | FileException e) {
+		printLocalNewLine("ERROR: " + e);
 	    }
 
 	}
 
     }
+    
+    private void listLocal() {
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(DIRECTORY))) {
+            for (Path path : directoryStream) {
+                printLocalNewLine(path.toString());
+            }
+        } catch (IOException ex) {}
+    }
+    
+    private void upload(String... input) throws IOException, RemoteException, AccountException, FileException {
+	String localFileName = input[1];
+	String filePath = DIRECTORY.concat(localFileName);
+	Path path = Paths.get(filePath);
+	if(Files.exists(path)) {
+	    AccessPermission ap = AccessPermission.valueOf(input[2].toUpperCase());
+	    ReadWritePermission rwp = ReadWritePermission.valueOf(input[3].toUpperCase());
+	    long size = Files.size(path);
+	    fcServer.uploadFile(myServerId, localFileName, size, ap, rwp);		
+    	    
+	} else {
+	    throw new FileNotFoundException("File not found");
+	}	
+    }
+    
+    private void download(String... input) throws RemoteException, AccountException, FileException {
+	fcServer.downloadFile(myServerId, input[1]);
+    }
 
     private String readUserInput() {
-	    printLocal(PROMPT);
-	    return scanner.nextLine();
-}
+	printLocal(PROMPT);
+	return scanner.nextLine();
+    }
 
     private synchronized void printLocal(String... parts) {
-	    for(String part : parts) {
-		    System.out.print(part);
-	    }
+	for(String part : parts) {
+	    System.out.print(part);
+	}
     }
 
     private synchronized void printLocalNewLine(String... parts) {
-	    for(String part : parts) {
-		    System.out.println(part);
-	    }
+	for(String part : parts) {
+	    System.out.println(part);
+	}
     }
 
     private void printHelpMessage() {
-	    printLocalNewLine(HELP,LOGIN,LOGOUT,NEWACC,DELACC,NEWFILE,DELFILE,
-					    FILEINFO,ALLFILES,USERFILES);
+	printLocalNewLine(HELP,LOGIN,LOGOUT,NEWACC,DELACC,UPLOAD,DOWNLOAD,
+		DELETE,INFO,LISTALLFILES,LISTUSERFILES);
     }
 
     /**
@@ -160,6 +204,7 @@ public class ClientInterpreter implements Runnable {
 	    @Override
 	    public void message(String message) throws RemoteException {
 		    printLocalNewLine(message);
+		    printLocal(PROMPT);
 	    }	
     }
 	

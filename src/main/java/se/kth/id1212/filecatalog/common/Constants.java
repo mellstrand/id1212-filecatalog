@@ -8,17 +8,11 @@ package se.kth.id1212.filecatalog.common;
 /**
  *
  * @author mellstrand
- * @date 2017-12-01
- * 
- * Permissions that applies when a file has AccessPermission PUBLIC
  */
-public enum ReadWritePermission {
-	/**
-	 * Can only read file, i.e download
-	 */
-	READ,
-	/**
-	 * Can download, delete or upload new version
-	 */
-	WRITE,
+public class Constants {
+    
+    public final static String SERVER_NAME = "localhost";
+    public final static int SERVER_PORT = 8080;
+    public final static String DIRECTORY = "files/";
+    
 }

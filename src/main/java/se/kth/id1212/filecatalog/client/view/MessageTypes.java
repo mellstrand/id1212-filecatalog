@@ -21,6 +21,7 @@ public enum MessageTypes {
      */
     LOGOUT,
     /**
+     * 
      */
     NEWACC,
     /**
@@ -30,20 +31,37 @@ public enum MessageTypes {
     /**
      * 
      */
-    NEWFILE,
-    /**
-     */
-    DELFILE,
+    LISTLOCAL,
     /**
      * 
      */
-    FILEINFO,
+    UPLOAD,
     /**
      * 
      */
-    ALLFILES,
+    DOWNLOAD,
     /**
      * 
      */
-    USERFILES
+    DELETE,
+    /**
+     * 
+     */
+    INFO,
+    /**
+     * 
+     */
+    LISTALLFILES,
+    /**
+     * 
+     */
+    LISTUSERFILES,
+    /**
+     * 
+     */
+    ADDNOTIFY,
+    /**
+     * 
+     */
+    QUIT
 }

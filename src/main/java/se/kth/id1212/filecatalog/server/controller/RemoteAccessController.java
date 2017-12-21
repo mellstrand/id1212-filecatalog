@@ -5,26 +5,31 @@
  */
 package se.kth.id1212.filecatalog.server.controller;
 
+import se.kth.id1212.filecatalog.server.model.File;
+import se.kth.id1212.filecatalog.server.model.UsersManager;
+import se.kth.id1212.filecatalog.server.model.Account;
+import se.kth.id1212.filecatalog.server.model.Holder;
+import se.kth.id1212.filecatalog.server.model.User;
+import se.kth.id1212.filecatalog.server.integration.FileCatalogDAO;
 import se.kth.id1212.filecatalog.common.FileCatalog;
 import se.kth.id1212.filecatalog.common.FileCatalogClient;
-import se.kth.id1212.filecatalog.server.model.File;
-import se.kth.id1212.filecatalog.server.integration.FileCatalogDAO;
-import se.kth.id1212.filecatalog.server.model.FileException;
-import se.kth.id1212.filecatalog.server.model.UsersManager;
+import se.kth.id1212.filecatalog.common.FileException;
+import se.kth.id1212.filecatalog.common.AccessPermission;
+import se.kth.id1212.filecatalog.common.ReadWritePermission;
+import se.kth.id1212.filecatalog.common.AccountException;
+import static se.kth.id1212.filecatalog.common.ReadWritePermission.WRITE;
+import static se.kth.id1212.filecatalog.common.AccessPermission.PUBLIC;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
-import se.kth.id1212.filecatalog.common.AccessPermission;
-import se.kth.id1212.filecatalog.common.ReadWritePermission;
-import se.kth.id1212.filecatalog.server.model.Account;
-import se.kth.id1212.filecatalog.server.model.AccountException;
-import se.kth.id1212.filecatalog.server.model.Holder;
-import se.kth.id1212.filecatalog.server.model.User;
+import javax.persistence.NoResultException;
 
 /**
  *
  * @author mellstrand
  * @date 2017-12-01
+ * 
+ * 
  */
 public class RemoteAccessController extends UnicastRemoteObject implements FileCatalog {
 
@@ -51,65 +56,147 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
 /*--------------------------------------*/
 
     /**
-     *
+     * Upload file to the server
+     * Only creates a metadata file in the database
+     * 
+     * TODO  Implement a upload process for the real file
+     * 
      * @param userId
      * @param fileName
+     * @param size
      * @param ap
      * @param rwp
      * @throws AccountException
      * @throws FileException
      */
     @Override
-    public void createFile(long userId, String fileName, AccessPermission ap, ReadWritePermission rwp) throws AccountException, FileException {
+    public void uploadFile(long userId, String fileName, long size, AccessPermission ap, ReadWritePermission rwp) throws AccountException, FileException {
 
-	//TODO
-	long size = 54;
-	
 	User user = userLoggedIn(userId);
 	try {
-	    Account account = fileCatalogDAO.accountExists(user.getUsername(), false);
-
-	    if( (fileCatalogDAO.fileExists(fileName, true)) == null) {
-		fileCatalogDAO.createFile(new File(account.getHolder(), fileName, size, ap, rwp));
-	    } else {
-		throw new FileException("Filename already exists");
+	    File file = fileCatalogDAO.fileExists(fileName, false);
+	    String fileOwner = file.getOwner();
+	    
+	    if( fileOwner.equals(user.getUsername()) ) {
+		
+		file.setSize(size);
+		file.setAccessPermission(ap);
+		file.setReadWritePermission(rwp);
+		fileCatalogDAO.update();
+		user.sendMessage("New version of file uploaded");
+		
+	    } else if ( file.getAccessPermission().equals(PUBLIC) &&
+		        file.getReadWritePermission().equals(WRITE) ) {
+		
+		file.setSize(size);
+		fileCatalogDAO.update();
+		user.sendMessage("New version of file uploaded!");
+		User owner = users.getUserByName(fileOwner);
+		if(owner != null && owner.fileInNotifyList(fileName)) {
+		    owner.sendMessage(user.getUsername() + " uploaded a new version of your file: " + fileName);
+		}
+	    
 	    }
-	} catch (Exception e) {
-	    throw new FileException("Create file failed.");
+	} catch (NoResultException nre) {
+	    Account account = fileCatalogDAO.accountExists(user.getUsername(), true);
+	    fileCatalogDAO.createFileMeta(new File(account.getHolder(), fileName, size, ap, rwp));
+	    user.sendMessage("File uploaded");
 	}	
     }
+    
+    /**
+     * TODO Let user download a file 
+     * 
+     * @param userId
+     * @param fileName
+     * @throws RemoteException
+     * @throws AccountException
+     * @throws FileException 
+     */
+    @Override
+    public void downloadFile(long userId, String fileName) throws RemoteException, AccountException, FileException {
+	User user = userLoggedIn(userId);
+	
+	try {
+	    File file = fileCatalogDAO.fileExists(fileName, true);
+	    String fileOwner = file.getOwner();
+	    
+	    if(fileOwner.equals(user.getUsername())) {
+		//TODO - Download real file
+		user.sendMessage("Downloading file " + fileName + "...");
+	    } else if(file.getAccessPermission().equals(PUBLIC)) {
+		//TODO - Downloasd real file
+	    	user.sendMessage("Downloading file " + fileName + "...");
+		User owner = users.getUserByName(fileOwner);
+		if(owner != null && owner.fileInNotifyList(fileName)) {
+		    owner.sendMessage(user.getUsername() + " downloaded your file: " + fileName);
+		}
+	    } else {
+		throw new AccountException("Your are not allowed to access this file");
+	    }
+	    
+	} catch (Exception e) {
+	    throw new FileException("File not found " + e);
+	}
+	
+    }
 
+    /**
+     * Only handles metadata for a file 
+     *
+     * TODO Deletion of real file
+     * 
+     * @param userId
+     * @param fileName
+     * @throws AccountException
+     * @throws FileException 
+     */
     @Override
     public void deleteFile(long userId, String fileName) throws AccountException, FileException {
 	User user = userLoggedIn(userId);
 
 	try {
 	    File file = fileCatalogDAO.fileExists(fileName, false);
-	    if(file.getOwner().equals(user.getUsername())) {
+	    String fileOwner = file.getOwner();
+	    
+	    if(fileOwner.equals(user.getUsername())) {
 		fileCatalogDAO.deleteFile(fileName);
+		user.sendMessage("File deleted!");
+	    
+	    } else if( file.getAccessPermission().equals(PUBLIC) &&
+			file.getReadWritePermission().equals(WRITE) ) {
+		
+		fileCatalogDAO.deleteFile(fileName);
+		user.sendMessage("File deleted!");
+		User owner = users.getUserByName(fileOwner);
+		if(owner != null && owner.fileInNotifyList(fileName)) {
+		    owner.sendMessage(user.getUsername() + " deleted your file: " + fileName);
+		}
+		
+	    
 	    } else {
-		throw new FileException("Not the owner of the file");
+		throw new FileException("Not the owner or the file is not PUBLIC and WRITABLE.");
 	    }
 	} catch(Exception e) {
-	    throw new FileException("Delete file failed.");
+	    throw new FileException("Delete file failed. " + e);
 	}
     }
 
     @Override
-    public void getFile(long userId, String fileName) throws AccountException, FileException {
+    public void getFileInfo(long userId, String fileName) throws AccountException, FileException {
 
 	User user = userLoggedIn(userId);
 	try {
 	    File file = fileCatalogDAO.fileExists(fileName, false);
 	    if( file.getAccessPermission().equals(AccessPermission.PUBLIC)) {
-		    user.sendMessage(file.toString());
+		user.sendMessage(file.info());
 	    } else if(file.getOwner().equals(user.getUsername())) {
-		    user.sendMessage(file.toString());
+		user.sendMessage(file.info());
 	    }else {
-		    throw new AccountException("Not allowed to access file");
+		throw new AccountException("Not allowed to access file");
 	    }
 	} catch (Exception e){
-	    throw new FileException("Get file failed");
+	    throw new FileException("Get file failed " + e);
 	}
     }
 
@@ -128,13 +215,13 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
 	    List<File> files = fileCatalogDAO.getAllFiles();
 	    for( File file : files) {
 		if( file.getOwner().equals(user.getUsername()) ) {
-		    user.sendMessage(file.toString());
+		    user.sendMessage(file.info());
 		} else if (file.getAccessPermission().equals(AccessPermission.PUBLIC)) {
-		    user.sendMessage(file.toString());
+		    user.sendMessage(file.info());
 		}
 	    } 
 	} catch (Exception e) {
-	    throw new FileException("Get all files failed");
+	    throw new FileException("Get all files failed " + e);
 	}
     }
     
@@ -150,11 +237,28 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
 	    try {
 		List<File> files = fileCatalogDAO.getAllAccountFiles(user.getUsername());
 		for ( File file : files) {
-		    user.sendMessage(file.toString());
+		    user.sendMessage(file.info());
 	    	}
 	} catch (Exception e) {
-		throw new FileException("Get all account files failed");
+		throw new FileException("Get all account files failed " + e);
 	    }
+    }
+    
+    @Override
+    public void addNotifyFile(long userId, String fileName) throws AccountException, FileException {
+	User user = userLoggedIn(userId);
+	try{
+	    File file = fileCatalogDAO.fileExists(fileName, true);
+	    if(file.getOwner().equals(user.getUsername())) {
+	        user.addFileToNotifyList(file.getId(), fileName);
+		user.sendMessage("File added to notify list");
+	    } else {
+		throw new AccountException("You are not the file owner");
+	    }
+	} catch (NoResultException nre) {
+	    throw new FileException("Could not find file, check filename");
+	}
+    
     }
 
 /*--------------------------------------*/
@@ -177,7 +281,7 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
 	    fileCatalogDAO.accountCreate(new Account(new Holder(accountName), password));
 
 	} catch(Exception e) {
-	    throw new AccountException("Create Account failed.");
+	    throw new AccountException("Create Account failed. " + e);
 	}
     }
 
@@ -201,7 +305,7 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
 		throw new AccountException("Couldnt find account");
 	    }
 	} catch(Exception e) {
-	    throw new AccountException("Delete account problem.");
+	    throw new AccountException("Delete account problem. " + e);
 	}
     }
 
@@ -224,13 +328,14 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
 		long userId = users.createUser(node, accountName);
 		account.setUserId(userId);
 		fileCatalogDAO.update();
+		users.sendToUser(userId, "Logged in, welcome " + accountName);
 		return userId;
 	    } else {
 		throw new AccountException("No account match with given credentials");
 	    }
 
 	} catch(Exception e) {
-	    throw new AccountException("Connection db problem.");
+	    throw new AccountException("Connection db problem. " + e);
 	}
     }
 
@@ -242,19 +347,16 @@ public class RemoteAccessController extends UnicastRemoteObject implements FileC
      */
     @Override
     public void logout(long userId) throws AccountException {
-	//Account temp;
+	User user = userLoggedIn(userId);
 	try {
-	    //temp = fileCatalogDAO.accountByUserId(userId, false);
-	    //if(temp != null) {
-		//System.out.println("DEBUG:" + temp.getHolderName());
-		//temp.setLoginId(0);
-		//fileCatalogDAO.updateAccount();
-		users.removeUser(userId);
-	    //} else {
-	    //	throw new AccountException("Logout problem, userid not found");
-	    //}
+	    Account account = fileCatalogDAO.accountByUserId(userId, false);
+	    System.out.println("DEBUG:" + account.getHolderName());
+	    account.setUserId(0);
+	    fileCatalogDAO.update();
+	    users.removeUser(userId);
+	
 	} catch(Exception e) {
-	    throw new AccountException("Logout problem...");
+	    throw new AccountException("Logout problem... " + e);
 	}
     }
 	

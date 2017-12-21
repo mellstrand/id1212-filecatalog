@@ -15,7 +15,8 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
-import se.kth.id1212.filecatalog.server.model.FileException;
+import se.kth.id1212.filecatalog.common.AccessPermission;
+import se.kth.id1212.filecatalog.common.ReadWritePermission;
 
 
 /**
@@ -55,13 +56,31 @@ public class FileCatalogDAO {
 /*--------------------------------------*/
 
 
-    public void createFile(FileDTO fileName) {
+    public void createFileMeta(FileDTO fileName) {
 	try {
 	    EntityManager entityManager = beginTransaction();
 	    entityManager.persist(fileName);
 	} finally {
 	    commitTransaction();
 	}
+    }
+
+    public void updateFileMeta(String fileName, long size, AccessPermission ap, ReadWritePermission rwp) {
+	try {
+	    File file = fileExists(fileName, false);
+	    file.setSize(size);
+	    
+	    
+	} finally {
+	    
+	}
+    
+    }
+    
+    
+    public void updateFileMetaPartially(String fileName, long size) {
+
+    
     }
 
     public void deleteFile(String fileName) {
@@ -104,7 +123,7 @@ public class FileCatalogDAO {
 	try {
 	    EntityManager entityManager = beginTransaction();
 	    return entityManager.createNamedQuery("getAllAccountFiles", File.class)
-		    .setParameter("name", accountName).getResultList();
+		    .setParameter("accountName", accountName).getResultList();
 	} catch(NoResultException nre) {
 	    return null;
 	}
@@ -120,8 +139,8 @@ public class FileCatalogDAO {
 	    try {
 	       EntityManager entityManager = beginTransaction();
 		return entityManager.createNamedQuery("accountLogin", Account.class)
-		    .setParameter("name", accountName)
-		    .setParameter("password", accountPassword).getSingleResult();
+		    .setParameter("accountName", accountName)
+		    .setParameter("accountPassword", accountPassword).getSingleResult();
 	    } catch(NoResultException nre) {
 		return null;
 	    }
@@ -145,6 +164,8 @@ public class FileCatalogDAO {
 	    }
 	}
 	
+	
+	//TODO - rollback issue... 
 	public void accountDelete(AccountDTO account) {
 	    try {
 		EntityManager entityManager = beginTransaction();
@@ -171,22 +192,20 @@ public class FileCatalogDAO {
 		}
 	}
 	
-	public Account accountByUserId(long userId, boolean endTransaction) {
-		try {
-			EntityManager entityManager = beginTransaction();
-			try {
-				return entityManager.createNamedQuery("accountByUserId", Account.class).
-					setParameter("userId", userId).getSingleResult();
-			} catch(NoResultException nre) {
-				return null;	
-			}
-		} finally {
-			if(endTransaction) {
-				commitTransaction();
-			}
-		}
+    public Account accountByUserId(long userId, boolean endTransaction) {
+	try {
+	    EntityManager entityManager = beginTransaction();
+	    try {
+		return entityManager.createNamedQuery("accountByUserId", Account.class).
+			setParameter("userId", userId).getSingleResult();
+	    } catch(NoResultException nre) {
+		    return null;	
+	    }
+	} finally {
+	    if(endTransaction) {
+		commitTransaction();
+	    }
 	}
-
-  
+    }
 
 }

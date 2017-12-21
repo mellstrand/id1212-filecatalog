@@ -85,7 +85,10 @@ public class File implements FileDTO {
 	    this.rwpermission = rwpermission;
     }
 
-
+    public long getId() {
+	return fileId;
+    }
+    
     public String getFileName() {
 	return fileName;
     }
@@ -106,8 +109,16 @@ public class File implements FileDTO {
 	    return access;
     }
 
+    public void setAccessPermission(AccessPermission access) {
+	    this.access = access;
+    }
+    
     public ReadWritePermission getReadWritePermission() {
 	    return rwpermission;
+    }
+    
+    public void setReadWritePermission(ReadWritePermission rwpermission) {
+	this.rwpermission = rwpermission;
     }
 
     @Override

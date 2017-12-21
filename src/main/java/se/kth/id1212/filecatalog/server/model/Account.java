@@ -37,7 +37,7 @@ import javax.persistence.Version;
     ,
     @NamedQuery(
 	name = "accountLogin",
-	query = "SELECT acct FROM Account acct WHERE acct.holder.name=:accountName AND acct.password=:accountPassword"
+	query = "SELECT acct FROM Account acct WHERE acct.holder.name LIKE :accountName AND acct.password LIKE :accountPassword"
     )
     ,
     @NamedQuery(
@@ -93,7 +93,7 @@ public class Account implements AccountDTO {
     }
 
     public void setUserId(long userId) {
-	    this.userId = userId;
+	this.userId = userId;
     }
 
     public long getUserId() {

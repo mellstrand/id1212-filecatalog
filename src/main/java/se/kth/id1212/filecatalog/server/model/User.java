@@ -7,6 +7,9 @@ package se.kth.id1212.filecatalog.server.model;
 
 import se.kth.id1212.filecatalog.common.FileCatalogClient;
 import java.rmi.RemoteException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -17,14 +20,13 @@ public class User {
 	
     private final long userId;
     private final FileCatalogClient node;
-    private final UsersManager usersManager;
     private final String username;
+    private final Map<Long, String> notifyList = Collections.synchronizedMap(new HashMap<>());
 
-    public User(long userId, String username, FileCatalogClient node, UsersManager usersManager) {
+    public User(long userId, String username, FileCatalogClient node) {
 	this.userId = userId;
 	this.username = username;
-	this.node = node;
-	this.usersManager = usersManager;	
+	this.node = node;	
     }
 
     public void sendMessage(String message) {
@@ -32,7 +34,7 @@ public class User {
 	    try {
 		node.message(message);
 	    } catch(RemoteException re) {
-		System.err.println("Couldnt deliver message to " + username);
+		System.err.println("Could not deliver message to " + username + " - " + re);
 	    }
 	});
     }
@@ -40,6 +42,13 @@ public class User {
     public String getUsername() {
 	return username;
     }
+    
+    public void addFileToNotifyList(long id, String fileName) {
+	notifyList.put(id, fileName);
+    }
 
-	
+    public boolean fileInNotifyList(String fileName) {
+	return notifyList.containsValue(fileName);
+    }
+
 }
